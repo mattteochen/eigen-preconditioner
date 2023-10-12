@@ -5,7 +5,7 @@
  *  @date   2023-10-12 
  ***********************************************/
 
-#include "custom_preconditioner_base.hpp"
+#include "../../lib/custom_preconditioner_base.hpp"
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/SparseCore>
 #include <iostream>
