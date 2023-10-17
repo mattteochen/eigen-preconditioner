@@ -1,16 +1,19 @@
 /** 
- *  @file   custom_preconditioner_base.cpp 
- *  @brief  Custom Eigen Preconditioner Base Class Exaple Usage
+ *  @file   main.cpp 
+ *  @brief  Eigen Additive Schwarz Preconditioner Class Exaple Usage
  *  @author Kaixi Matteo Chen 
  *  @date   2023-10-12 
  ***********************************************/
 
-#include "../../lib/custom_preconditioner_base.hpp"
+#include "../../lib/additive_schwzrz.hpp"
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/SparseCore>
 #include <iostream>
 #include <string>
 
+/*
+ * still not parallel, do not go over 100
+ * */
 constexpr unsigned MATRIX_SIZE = 100;
 /*
  * tridiagonal matrix setting
@@ -26,7 +29,7 @@ using SpVec=Eigen::VectorXd;
 
 auto fill_matrix = [](SpMat& m) -> void {
   for (int i=0; i<MATRIX_SIZE; i++) {
-    m.coeffRef(i, i) = 2.0*(i+1);
+    m.coeffRef(i, i) = 2.0;
     if(i>0) m.coeffRef(i, i-1) = -i;
     if(i<MATRIX_SIZE-1) m.coeffRef(i, i+1) = -(i+1);
   }
@@ -48,7 +51,7 @@ void test(const std::string info, Matrix& A, Result& b, Unknown& x, Error& e) {
 }
 
 int main() {
-  cout << "This simple program compares Eigen built it DiagonalPreconditioner class with CustomPreconditionerBase class" << endl << endl;
+  cout << "This simple program compares Eigen built it DiagonalPreconditioner class with AdditiveSchwarz class" << endl << endl;
 
   SpMat A(MATRIX_SIZE, MATRIX_SIZE);
   A.reserve(RESERVE_SIZE);
@@ -57,7 +60,7 @@ int main() {
   SpVec b = A * e;
   SpVec x(A.rows());
 
-  test<SpMat, SpVec, SpVec, SpVec, CustomPreconditionerBase<double>>("#####Eigen native CG with custom preconditioner#####", A, b, x, e);
+  test<SpMat, SpVec, SpVec, SpVec, AdditiveSchwarz<double, SpMat>>("#####Eigen native CG with custom preconditioner#####", A, b, x, e);
   x *= 0;
   test<SpMat, SpVec, SpVec, SpVec, Eigen::DiagonalPreconditioner<double>>("#####Eigen native CG with diagonal preconditioner#####", A, b, x, e);
 

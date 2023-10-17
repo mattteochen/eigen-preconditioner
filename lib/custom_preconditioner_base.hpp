@@ -5,6 +5,9 @@
  *  @date   2023-10-12 
  ***********************************************/
 
+#ifndef H_CUSTOM_PRECONDITIONER_HPP
+#define H_CUSTOM_PRECONDITIONER_HPP
+
 #include <iostream>
 #include <Eigen/Core>
 
@@ -21,19 +24,17 @@ class CustomPreconditionerBase
     };
 
     CustomPreconditionerBase() : m_isInitialized(false) {
-      std::cout << "You have chosen the CustomPreconditionerBase based on the identity matrix" << std::endl;
     }
 
     template<typename MatType>
     explicit CustomPreconditionerBase(const MatType& mat) : m_preconditioner_matrix(mat.rows(), mat.cols()) {
-      std::cout << "You have chosen the CustomPreconditionerBase based on the identity matrix" << std::endl;
       compute(mat);
     }
 
-    EIGEN_CONSTEXPR Eigen::Index rows() const EIGEN_NOEXCEPT {
+    constexpr Eigen::Index rows() const EIGEN_NOEXCEPT {
       return m_preconditioner_matrix.rows();
     }
-    EIGEN_CONSTEXPR Eigen::Index cols() const EIGEN_NOEXCEPT {
+    constexpr Eigen::Index cols() const EIGEN_NOEXCEPT {
       return m_preconditioner_matrix.cols();
     }
 
@@ -79,7 +80,19 @@ class CustomPreconditionerBase
       return Eigen::Success;
     };
 
+    void update_initialiazed(const bool initialized) {
+      m_isInitialized = initialized;
+    }
+
+    bool get_initialiazed() const {
+      return m_isInitialized;
+    }
+
   protected:
-    Matrix m_preconditioner_matrix;
     bool m_isInitialized;
+  
+  private:
+    Matrix m_preconditioner_matrix;
 };
+
+#endif //H_CUSTOM_PRECONDITIONER_HPP
