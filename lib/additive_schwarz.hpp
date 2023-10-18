@@ -13,8 +13,10 @@
 #include "CTPL/ctpl_stl.h"
 #include <Eigen/Dense>
 #include <cassert>
+#include <exception>
 #include <iostream>
 #include <mutex>
+#include <stdint.h>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -29,7 +31,7 @@ class AdditiveSchwarz : public CustomPreconditionerBase<Scalar>
     typedef Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic> SubMatrix;
     using Matrix = SubMatrix;
 
-    static constexpr uint8_t CORES = 1;
+    static constexpr uint8_t CORES = 4;
   public:
 
     AdditiveSchwarz() : CustomPreconditionerBase<Scalar>() {
@@ -79,11 +81,14 @@ class AdditiveSchwarz : public CustomPreconditionerBase<Scalar>
 
       x.resize(m_original_mat_size,1);
       std::vector<std::future<void>> results(CORES);
+      uint32_t counter = 0;
       for (uint32_t sub=0; sub<m_num_submatrixes;) {
         for (uint32_t i=0; i<CORES; i++) {
+          if (sub >= m_num_submatrixes) {
+            break;
+          }
           results[i] = t_pool.push(
               [&mtx, &x, &b, this, sub](uint32_t) {
-              // std::cout << "Thread " << sub << std::endl;
               auto lhs = this->m_restrictions_t[sub] * this->m_restrictions[sub] * b;
               auto rhs = this->m_restrictions_t[sub] * this->m_submatrixes[sub] * this->m_restrictions[sub];
             #if (USE_LDLT == 1)
@@ -107,9 +112,13 @@ class AdditiveSchwarz : public CustomPreconditionerBase<Scalar>
           sub++;
         }
         for (uint32_t i=0; i<CORES; i++) {
-          results[i].get();
+          if (results[i].valid()) {
+            counter++;
+            results[i].get();
+          }
         }
       }
+      std::cout << "C " << counter << " mat size " << m_original_mat_size << std::endl;
     }
   #else
     /** \internal */
